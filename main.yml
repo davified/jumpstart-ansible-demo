@@ -1,4 +1,39 @@
-- hosts: webserver
+- hosts: webserver  
+  become: true
   tasks:
   - name: smoke test
-    shell: echo 'hello world'
+    shell: echo 'running smoke test'
+
+  - name: Install apt dependencies
+    apt:
+      name: "{{ item }}"
+      state: latest
+    loop:
+      - git
+      - apt-transport-https
+      - nodejs
+      - yarn
+
+  # - name: get latest source code
+  #   shell: git pull
+
+  - name: install project dependencies
+    shell: yarn install
+    args:
+      chdir: /home/davidtan/express-hello-world
+
+  # Start express app
+  - name: Install forever (to run Node.js app)
+    npm:
+      name: forever 
+      global: yes
+      state: present
+
+  - name: Check list of Node.js apps running
+    command: forever list
+    register: forever_list
+    changed_when: false
+
+  - name: Start node app
+    command: forever start /home/davidtan/express-hello-world/bin/www
+    when: "forever_list.stdout.find('/home/davidtan/express-hello-world/bin/www') == -1"
