@@ -1,0 +1,4 @@
+- hosts: webserver
+  tasks:
+  - name: smoke test
+    shell: echo 'hello world'
